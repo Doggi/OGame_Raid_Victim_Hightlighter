@@ -2,7 +2,7 @@
 // @name        OGame Raid Victim Hightlighter
 // @namespace   de.grzanna-online.ogame
 // @include     http*://*.ogame.gameforge.com/game/index.php?page=galaxy*
-// @version     1.01
+// @version     1.02
 // @grant       none
 // ==/UserScript==
 
@@ -42,6 +42,171 @@
 // Script //
 var baseSelector = "table#galaxytable tbody tr.row td.playername";
 var maxRank = 1400;
+var maxRange = 120;
+var maxSleep = 1600;
+var minSleep = 800;
+var toRight = +1;
+var toLeft = -1;
+var direction = toRight;
+var scriptStarted = false;
+var timeout = null;
+
+
+
+
+function loadSettings(){
+    var _scriptStarted = Boolean(sessionStorage.getItem("oagme_raid_victim_hightlighter_started"));
+    scriptStarted = _scriptStarted || scriptStarted;
+
+    var _maxRank = Number(localStorage.getItem("oagme_raid_victim_hightlighter_max_rank"));
+    maxRank = _maxRank || maxRank;
+
+    var _maxRange = Number(localStorage.getItem("oagme_raid_victim_hightlighter_max_range"));
+    maxRange = _maxRange || maxRange;
+
+    var _maxSleep = Number(localStorage.getItem("oagme_raid_victim_hightlighter_max_sleep"));
+    maxSleep = _maxSleep || maxSleep;
+
+    var _minSleep = Number(localStorage.getItem("oagme_raid_victim_hightlighter_min_sleep"));
+    minSleep = _minSleep || minSleep;
+
+    console.log("config", {
+        scriptStarted: scriptStarted,
+        maxRank: maxRank,
+        maxRange: maxRange,
+        maxSleep: maxSleep,
+        minSleep: minSleep
+    });
+}
+
+loadSettings();
+
+
+
+function addStartStopButton(){
+    console.log("add start buttom");
+    var buttomText = ( scriptStarted ? "stop" : "start" );
+    $("div#galaxyHeader form").append('<div id="ogame_raid_victim_hightlighter_start_stop_buttom" class="btn_blue float_right">' + buttomText + ' Scanner</div>');
+    $("div#ogame_raid_victim_hightlighter_start_stop_buttom").click(function(){
+        console.log("click buttom");
+        scriptStarted = !scriptStarted;
+        console.log(scriptStarted, typeof scriptStarted);
+        buttomText = ( scriptStarted ? "stop" : "start" );
+        sessionStorage.setItem('oagme_raid_victim_hightlighter_started', scriptStarted );
+        $(this).html(buttomText + ' Scanner');
+        if( scriptStarted ){
+            auto();
+        } else {
+            if( timeout !== null ){
+                clearTimeout(timeout);
+            }
+        }
+    });
+}
+/**
+ *
+ * @returns {number}
+ */
+function getFreeSlots(){
+    var slotsTotal = Number($("span#slotValue").html().match(/\/\d+/i)[0].replace("/", ""));
+    var slotsUsed = Number($("span#slotUsed").html());
+    console.log("find total slots: " + slotsTotal);
+    console.log("find used slots: " + slotsUsed);
+    var slotsFree = slotsTotal - slotsUsed;
+    console.log("find free slots: " + slotsFree);
+    return slotsFree;
+}
+/**
+ *
+ */
+function gotoSunsystem(system){
+    var input = $("div#galaxyHeader form input#system_input");
+    input.val(system);
+    $("div#galaxyHeader form div[onclick='submitForm();']").click();
+}
+
+function getSunsystem(){
+    var input = $("div#galaxyHeader form input#system_input");
+    return input.val();
+}
+/**
+ *
+ * @returns {Array}
+ */
+function getStartPosition(){
+    var mond = $("span.planet-koords.moon_active");
+    var planet = $("a.planetlink.active span.planet-koords");
+    var active = null;
+    if( planet.length == 1 ){
+        active = planet;
+    } else if( mond.length == 1 ){
+        active = mond;
+    }
+    var coordinaten = active.html().match(/\[\d+:\d+:\d+\]/i)[0].replace("[", "").replace("]", "").split(":");
+    return coordinaten;
+}
+
+function getRandomArbitrary(min, max) {
+    var rand = Math.random() * (max - min) + min;
+    console.log("Random: " + rand);
+    return rand;
+}
+
+function scan(victims){
+    var victim = victims.pop();
+    console.log(victim);
+    $(victim).css("background-color", "blue");
+    if( victims.length > 0 ){
+        timeout = setTimeout(function(){scan(victims)}, getRandomArbitrary(minSleep, maxSleep));
+    } else {
+        timeout = setTimeout(function(){nextSunsystem()}, getRandomArbitrary(minSleep, maxSleep));
+    }
+}
+
+function nextSunsystem(){
+    var home = getStartPosition();
+    var actual = getSunsystem();
+    if( Math.abs(home[1]-actual) < maxRange ){
+        var next = Number(actual) + direction;
+        gotoSunsystem(next);
+        return true;
+    }
+    return false;
+}
+
+function findInactive(){
+    return $(baseSelector+".longinactive, "+ baseSelector+".inactive").not(".vacation").parent();
+}
+
+function findVictims(){
+    var inactive = $(baseSelector+".longinactive, "+ baseSelector+".inactive").not(".vacation").parent();
+    var victims = $.map(inactive, function(item){
+        return $(item).find("td.spacer03 a span").html() < maxRange ? null : item ;
+    });
+    return victims;
+}
+
+function auto(inactives) {
+    var _victims = inactives || findVictims();
+
+    timeout = setTimeout(function () {
+        if( _victims.length > 0 ){
+            // Opfer vorhanden
+            if( getFreeSlots() >= _victims.length || true ){
+                // genügend freie slots zum scannen
+                scan(_victims);
+            } else {
+                // wenn nicht genügend freie slots frei sind sonnensystem nach x Sekunden neu laden
+                timeout = setTimeout(function(){
+                    var system = getSunsystem();
+                    gotoSunsystem(system);
+                }, getRandomArbitrary(minSleep, maxSleep));
+            }
+        } else {
+            nextSunsystem();
+        }
+    }, getRandomArbitrary(minSleep, maxSleep));
+}
 
 (function () {
     var $ = window.jQuery;
@@ -53,16 +218,19 @@ var maxRank = 1400;
 
     //alles was nach dem laden passieren soll
     $("div#galaxyContent").waitUntilExists(function () {
+        addStartStopButton();
         $("table#galaxytable").waitUntilExists(function(){
-            var victims = $(baseSelector+".longinactive, "+ baseSelector+".inactive").not(".vacation").parent();
-            victims.each(function(index){
-                var rank = $(this).find("td.spacer03 a span").html();
-                if( rank < maxRank ){
-                    $(this).css("background-color","green");
-                    var spioLink = $(this).find("td.action span a.espionage");
-                    spioLink.css("background-color","red");
-                }
+
+            var inactive = findVictims();
+
+            $.each(inactive, function(index, value){
+                $(value).css("background-color","green");
             });
+
+            if( scriptStarted ) {
+                console.log("script ist gestartet");
+                auto( inactive );
+            }
         });
     });
 
