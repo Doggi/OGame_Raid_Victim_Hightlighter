@@ -83,7 +83,9 @@ loadSettings();
 function addStartStopButton(){
     console.log("add start buttom");
     var buttomText = ( scriptStarted ? "stop" : "start" );
+    $("div#galaxyHeader form").append('<div id="" class="btn_blue float_right"> < </div>');
     $("div#galaxyHeader form").append('<div id="ogame_raid_victim_hightlighter_start_stop_buttom" class="btn_blue float_right">' + buttomText + ' Scanner</div>');
+    $("div#galaxyHeader form").append('<div id="" class="btn_blue float_right"> > </div>');
     $("div#ogame_raid_victim_hightlighter_start_stop_buttom").click(function(){
         console.log("click buttom");
         scriptStarted = !scriptStarted;
@@ -191,14 +193,13 @@ function auto(inactives) {
     timeout = setTimeout(function () {
         if( _victims.length > 0 ){
             // Opfer vorhanden
-            if( getFreeSlots() >= _victims.length || true ){
+            if( getFreeSlots() >= _victims.length ){
                 // genügend freie slots zum scannen
                 scan(_victims);
             } else {
                 // wenn nicht genügend freie slots frei sind sonnensystem nach x Sekunden neu laden
                 timeout = setTimeout(function(){
-                    var system = getSunsystem();
-                    gotoSunsystem(system);
+                    gotoSunsystem(getSunsystem());
                 }, getRandomArbitrary(minSleep, maxSleep));
             }
         } else {
