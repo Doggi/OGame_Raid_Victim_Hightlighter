@@ -2,7 +2,7 @@
 // @name        OGame Raid Victim Hightlighter
 // @namespace   de.grzanna-online.ogame
 // @include     http*://*.ogame.gameforge.com/game/index.php?page=galaxy*
-// @version     1.03
+// @version     1.04
 // @grant       none
 // ==/UserScript==
 
@@ -50,9 +50,6 @@ var toLeft = -1;
 var direction = toRight;
 var scriptStarted = false;
 var timeout = null;
-
-
-
 
 function loadSettings(){
     var _scriptStarted = Boolean(sessionStorage.getItem("oagme_raid_victim_hightlighter_started"));
