@@ -2,7 +2,7 @@
 // @name        OGame Raid Victim Hightlighter
 // @namespace   de.grzanna-online.ogame
 // @include     http*://*.ogame.gameforge.com/game/index.php?page=galaxy*
-// @version     1.04
+// @version     1.05
 // @grant       none
 // ==/UserScript==
 
@@ -157,11 +157,19 @@ function scan(victims){
     var victim = victims.pop();
     console.log(victim);
     $(victim).css("background-color", "blue");
-    if( victims.length > 0 ){
-        timeout = setTimeout(function(){scan(victims)}, getRandomArbitrary(minSleep, maxSleep));
-    } else {
-        timeout = setTimeout(function(){nextSunsystem()}, getRandomArbitrary(minSleep, maxSleep));
-    }
+    $(victim).find("td.action span a.espionage").click();
+    $("td#fleetstatusrow div").waitUntilExists(function(){
+        //if( $("td#fleetstatusrow div.success").length >= 1 ){
+            if( victims.length > 0 ){
+                timeout = setTimeout(function(){scan(victims)}, getRandomArbitrary(minSleep, maxSleep));
+            } else {
+                timeout = setTimeout(function(){nextSunsystem()}, getRandomArbitrary(minSleep, maxSleep));
+            }
+        /*} else {
+            victims.push(victim);
+            timeout = setTimeout(function(){scan(victims)}, getRandomArbitrary(minSleep, maxSleep));
+        }*/
+    });
 }
 
 function nextSunsystem(){
@@ -182,7 +190,7 @@ function findInactive(){
 function findVictims(){
     var inactive = $(baseSelector+".longinactive, "+ baseSelector+".inactive").not(".vacation").parent();
     var victims = $.map(inactive, function(item){
-        return $(item).find("td.spacer03 a span").html() < maxRange ? null : item ;
+        return $(item).find("td.spacer03 a span").html() < maxRank ? item : null;
     });
     return victims;
 }
