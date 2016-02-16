@@ -2,7 +2,7 @@
 // @name        OGame Raid Victim Hightlighter
 // @namespace   de.grzanna-online.ogame
 // @include     http*://*.ogame.gameforge.com/game/index.php?page=galaxy*
-// @version     1.02
+// @version     1.03
 // @grant       none
 // ==/UserScript==
 
@@ -43,8 +43,8 @@
 var baseSelector = "table#galaxytable tbody tr.row td.playername";
 var maxRank = 1400;
 var maxRange = 120;
-var maxSleep = 1600;
-var minSleep = 800;
+var maxSleep = 1500;
+var minSleep = 1000;
 var toRight = +1;
 var toLeft = -1;
 var direction = toRight;
@@ -122,7 +122,9 @@ function getFreeSlots(){
 function gotoSunsystem(system){
     var input = $("div#galaxyHeader form input#system_input");
     input.val(system);
-    $("div#galaxyHeader form div[onclick='submitForm();']").click();
+    timeout = setTimeout(function(){
+        $("div#galaxyHeader form div[onclick='submitForm();']").click();
+    }, getRandomArbitrary(minSleep, maxSleep));
 }
 
 function getSunsystem(){
