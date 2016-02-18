@@ -3,7 +3,7 @@
 // @namespace   de.grzanna-online.ogame
 // @include     http*://*.ogame.gameforge.com/game/index.php?page=galaxy*
 // @version     1.06
-// @grant       GM_xmlhttpRequest
+// @grant       none
 // ==/UserScript==
 
 // Wait for a element
@@ -77,14 +77,6 @@ function loadSettings(){
 }
 
 loadSettings();
-
-GM_xmlhttpRequest({
-    method: "GET",
-    url: "http://www.example.com/",
-    onload: function(response) {
-        alert(response.responseText);
-    }
-});
 
 
 
