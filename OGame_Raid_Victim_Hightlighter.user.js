@@ -2,7 +2,7 @@
 // @name        OGame Raid Victim Hightlighter
 // @namespace   de.grzanna-online.ogame
 // @include     http*://*.ogame.gameforge.com/game/index.php?page=galaxy*
-// @version     1.06
+// @version     1.07
 // @grant       none
 // ==/UserScript==
 
@@ -47,9 +47,10 @@ var maxSleep = 1500;
 var minSleep = 1000;
 var toRight = +1;
 var toLeft = -1;
-var direction = toRight;
+var direction = toLeft;
 var scriptStarted = false;
 var timeout = null;
+var block = false;
 
 function loadSettings(){
     var _scriptStarted = Boolean(sessionStorage.getItem("oagme_raid_victim_hightlighter_started"));
@@ -87,11 +88,8 @@ function addStartStopButton(){
     $("div#galaxyHeader form").append('<div id="ogame_raid_victim_hightlighter_start_stop_buttom" class="btn_blue float_right">' + buttomText + ' Scanner</div>');
     $("div#galaxyHeader form").append('<div id="" class="btn_blue float_right"> > </div>');
     $("div#ogame_raid_victim_hightlighter_start_stop_buttom").click(function(){
-        console.log("click buttom");
         scriptStarted = !scriptStarted;
-        console.log(scriptStarted, typeof scriptStarted);
         buttomText = ( scriptStarted ? "stop" : "start" );
-        sessionStorage.setItem('oagme_raid_victim_hightlighter_started', scriptStarted );
         $(this).html(buttomText + ' Scanner');
         if( scriptStarted ){
             auto();
@@ -155,20 +153,18 @@ function getRandomArbitrary(min, max) {
 
 function scan(victims){
     var victim = victims.pop();
+    console.log(victims.length);
     console.log(victim);
     $(victim).css("background-color", "blue");
     $(victim).find("td.action span a.espionage").click();
     $("td#fleetstatusrow div").waitUntilExists(function(){
-        //if( $("td#fleetstatusrow div.success").length >= 1 ){
             if( victims.length > 0 ){
+                console.log("scan next");
                 timeout = setTimeout(function(){scan(victims)}, getRandomArbitrary(minSleep, maxSleep));
             } else {
+                console.log("scan sunsystem");
                 timeout = setTimeout(function(){nextSunsystem()}, getRandomArbitrary(minSleep, maxSleep));
             }
-        /*} else {
-            victims.push(victim);
-            timeout = setTimeout(function(){scan(victims)}, getRandomArbitrary(minSleep, maxSleep));
-        }*/
     });
 }
 
@@ -183,10 +179,6 @@ function nextSunsystem(){
     return false;
 }
 
-function findInactive(){
-    return $(baseSelector+".longinactive, "+ baseSelector+".inactive").not(".vacation").parent();
-}
-
 function findVictims(){
     var inactive = $(baseSelector+".longinactive, "+ baseSelector+".inactive").not(".vacation").parent();
     var victims = $.map(inactive, function(item){
@@ -195,8 +187,8 @@ function findVictims(){
     return victims;
 }
 
-function auto(inactives) {
-    var _victims = inactives || findVictims();
+function auto() {
+    var _victims = findVictims();
 
     timeout = setTimeout(function () {
         if( _victims.length > 0 ){
@@ -228,7 +220,10 @@ function auto(inactives) {
     $("div#galaxyContent").waitUntilExists(function () {
         addStartStopButton();
         $("table#galaxytable").waitUntilExists(function(){
-
+            if (block) {
+                return;
+            }
+            block = true;
             var inactive = findVictims();
 
             $.each(inactive, function(index, value){
@@ -237,9 +232,13 @@ function auto(inactives) {
 
             if( scriptStarted ) {
                 console.log("script ist gestartet");
-                auto( inactive );
+                auto();
             }
         });
+    });
+
+    $("#galaxyLoading[style='display: none;']").waitUntilExists(function(){
+        console.log("loading weg");
     });
 
 })();
