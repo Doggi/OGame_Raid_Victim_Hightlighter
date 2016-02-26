@@ -2,7 +2,7 @@
 // @name        OGame Raid Victim Hightlighter
 // @namespace   de.grzanna-online.ogame
 // @include     http*://*.ogame.gameforge.com/game/index.php?page=galaxy*
-// @version     1.08
+// @version     1.09
 // @grant       none
 // ==/UserScript==
 
@@ -164,8 +164,14 @@ function scan(victims){
         console.log("scan next");
         timeout = setTimeout(function(){scan(victims)}, getRandomArbitrary(minSleep, maxSleep));
     } else {
-        console.log("scan sunsystem");
-        timeout = setTimeout(function(){nextSunsystem()}, getRandomArbitrary(minSleep, maxSleep));
+        if( Math.abs( getSunsystem() - getStartPosition()[1] ) <= maxRange ) {
+            console.log("scan sunsystem");
+            timeout = setTimeout(function () {
+                nextSunsystem()
+            }, getRandomArbitrary(minSleep, maxSleep));
+        } else {
+            console.log("reached max range");
+        }
     }
 }
 
