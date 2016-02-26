@@ -2,7 +2,7 @@
 // @name        OGame Raid Victim Hightlighter
 // @namespace   de.grzanna-online.ogame
 // @include     http*://*.ogame.gameforge.com/game/index.php?page=galaxy*
-// @version     1.07
+// @version     1.08
 // @grant       none
 // ==/UserScript==
 
@@ -47,7 +47,7 @@ var maxSleep = 1500;
 var minSleep = 1000;
 var toRight = +1;
 var toLeft = -1;
-var direction = toLeft;
+var direction = toRight;
 var scriptStarted = false;
 var timeout = null;
 var block = false;
@@ -84,9 +84,9 @@ loadSettings();
 function addStartStopButton(){
     console.log("add start buttom");
     var buttomText = ( scriptStarted ? "stop" : "start" );
-    $("div#galaxyHeader form").append('<div id="" class="btn_blue float_right"> < </div>');
+    $("div#galaxyHeader form").append('<div id="ogame_raid_victim_hightlighter_left" class="btn_blue float_right"> < </div>');
     $("div#galaxyHeader form").append('<div id="ogame_raid_victim_hightlighter_start_stop_buttom" class="btn_blue float_right">' + buttomText + ' Scanner</div>');
-    $("div#galaxyHeader form").append('<div id="" class="btn_blue float_right"> > </div>');
+    $("div#galaxyHeader form").append('<div id="ogame_raid_victim_hightlighter_right" style="color: red;" class="btn_blue float_right"> > </div>');
     $("div#ogame_raid_victim_hightlighter_start_stop_buttom").click(function(){
         scriptStarted = !scriptStarted;
         buttomText = ( scriptStarted ? "stop" : "start" );
@@ -99,6 +99,9 @@ function addStartStopButton(){
             }
         }
     });
+    $("#ogame_raid_victim_hightlighter_right").click(function(){direction=toRight;$(this).css("color", "red");;$("#ogame_raid_victim_hightlighter_left").css("color", "white");});
+    $("#ogame_raid_victim_hightlighter_left").click(function(){direction=toLeft;$(this).css("color", "red");;$("#ogame_raid_victim_hightlighter_right").css("color", "white");});
+
 }
 /**
  *
@@ -121,6 +124,7 @@ function gotoSunsystem(system){
     input.val(system);
     timeout = setTimeout(function(){
         $("div#galaxyHeader form div[onclick='submitForm();']").click();
+        block = false;
     }, getRandomArbitrary(minSleep, maxSleep));
 }
 
@@ -147,25 +151,22 @@ function getStartPosition(){
 
 function getRandomArbitrary(min, max) {
     var rand = Math.random() * (max - min) + min;
-    console.log("Random: " + rand);
+    //console.log("Random: " + rand);
     return rand;
 }
 
 function scan(victims){
     var victim = victims.pop();
     console.log(victims.length);
-    console.log(victim);
     $(victim).css("background-color", "blue");
     $(victim).find("td.action span a.espionage").click();
-    $("td#fleetstatusrow div").waitUntilExists(function(){
-            if( victims.length > 0 ){
-                console.log("scan next");
-                timeout = setTimeout(function(){scan(victims)}, getRandomArbitrary(minSleep, maxSleep));
-            } else {
-                console.log("scan sunsystem");
-                timeout = setTimeout(function(){nextSunsystem()}, getRandomArbitrary(minSleep, maxSleep));
-            }
-    });
+    if( victims.length > 0 ){
+        console.log("scan next");
+        timeout = setTimeout(function(){scan(victims)}, getRandomArbitrary(minSleep, maxSleep));
+    } else {
+        console.log("scan sunsystem");
+        timeout = setTimeout(function(){nextSunsystem()}, getRandomArbitrary(minSleep, maxSleep));
+    }
 }
 
 function nextSunsystem(){
