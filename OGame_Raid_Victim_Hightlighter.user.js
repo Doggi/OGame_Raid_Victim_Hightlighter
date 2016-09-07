@@ -1,8 +1,8 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name        OGame Raid Victim Hightlighter
 // @namespace   de.grzanna-online.ogame
 // @include     http*://*.ogame.gameforge.com/game/index.php?page=galaxy*
-// @version     1.09
+// @version     1.10
 // @grant       none
 // ==/UserScript==
 
@@ -188,8 +188,9 @@ function nextSunsystem(){
 
 function findVictims(){
     var inactive = $(baseSelector+".longinactive, "+ baseSelector+".inactive").not(".vacation").parent();
+    console.log(inactive);
     var victims = $.map(inactive, function(item){
-        return $(item).find("td.spacer03 a span").html() < maxRank ? item : null;
+        return $(item).find("li.rank a").html() < maxRank ? item : null;
     });
     return victims;
 }
